@@ -109,10 +109,16 @@ def configure(store_root):
 
 def get_alias(client, alias):
     from mlflow.exceptions import MlflowException
-    try: return client.get_model_version_by_alias(MODEL,alias).version
+
+    try:
+        model = client.get_registered_model(MODEL)
     except MlflowException as e:
-        if e.error_code in ('RESOURCE_DOES_NOT_EXIST','NOT_FOUND'): return None
+        if e.error_code in ('RESOURCE_DOES_NOT_EXIST', 'NOT_FOUND'):
+            return None
         raise
+
+    version = model.aliases.get(alias)
+    return str(version) if version is not None else None
 
 
 def register_snapshot(s, store_root=ROOT):

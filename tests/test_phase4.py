@@ -83,7 +83,7 @@ def test_mlflow_registry_roundtrip(tmp_path,verified,monkeypatch):
         client.set_registered_model_alias(MODEL,'candidate',second.version)
         # Alias switching and backtracking without altering the real project registry.
         promoted=change_alias(tmp_path,second.version,'promote',input_root=ROOT)
-        assert promoted['champion']==second.version
+        assert promoted['champion']==str(second.version)
         rolled=change_alias(tmp_path,s['registered_version'],'rollback',input_root=ROOT)
         assert rolled['champion']==s['registered_version']
         assert get_alias(client,'champion')==s['registered_version']
