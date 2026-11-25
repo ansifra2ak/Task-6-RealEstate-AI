@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: task6
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task6-private
+  namespace: task6
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task6-app
+  namespace: task6
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: task6-app
+  template:
+    metadata:
+      labels:
+        app: task6-app
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: app
+          image: task6-phase9:local
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "backend.phase9_supervisor"]
+          ports:
+            - {name: dashboard, containerPort: 5176}
+            - {name: api, containerPort: 8006}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests: {cpu: 500m, memory: 1Gi}
+            limits: {cpu: '2', memory: 4Gi}
+          startupProbe:
+            httpGet: {path: /api/v1/health, port: api}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /api/v1/health, port: api}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /api/v1/health, port: api}
+            periodSeconds: 20
+          volumeMounts:
+            - {name: private, mountPath: /app/data, subPath: data, readOnly: true}
+            - {name: private, mountPath: /app/reports, subPath: reports, readOnly: true}
+            - {name: private, mountPath: /app/visualizations, subPath: visualizations, readOnly: true}
+            - {name: private, mountPath: /app/champion, subPath: champion, readOnly: true}
+            - {name: secrets, mountPath: /run/secrets, readOnly: true}
+      volumes:
+        - name: private
+          persistentVolumeClaim:
+            claimName: task6-private
+        - name: secrets
+          secret:
+            secretName: task6-runtime
+            defaultMode: 0440
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: task6-app
+  namespace: task6
+spec:
+  type: ClusterIP
+  selector:
+    app: task6-app
+  ports:
+    - {name: dashboard, port: 5176, targetPort: dashboard}
+    - {name: api, port: 8006, targetPort: api}

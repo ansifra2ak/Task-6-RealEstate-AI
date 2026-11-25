@@ -1,0 +1,28 @@
+groups:
+  - name: task6-monitoring
+    rules:
+      - alert: Task6ApiUnavailable
+        expr: up{job="task6-api"} == 0
+        for: 15s
+        labels: {severity: critical, mode: live}
+        annotations: {summary: 'API metrics scrape failed'}
+      - alert: Task6HighErrorRatio
+        expr: (sum(rate(task6_api_requests_total{status=~"5.."}[2m])) / clamp_min(sum(rate(task6_api_requests_total[2m])), 0.000001) > 0.05) and (sum(increase(task6_api_requests_total[2m])) >= 10)
+        for: 30s
+        labels: {severity: warning, mode: live}
+        annotations: {summary: 'More than 5% server errors with sufficient traffic'}
+      - alert: Task6SlowPrediction
+        expr: (histogram_quantile(0.95,sum by (le) (rate(task6_api_request_duration_seconds_bucket{route=~"single|batch"}[2m]))) > 1) and (sum(increase(task6_api_request_duration_seconds_count{route=~"single|batch"}[2m])) >= 10)
+        for: 30s
+        labels: {severity: warning, mode: live}
+        annotations: {summary: 'Prediction request p95 above 1 second'}
+      - alert: Task6LiveDistributionDrift
+        expr: (task6_drift_psi{mode="live"} >= 0.25) and on (job,instance,mode) (task6_drift_ready{mode="live"} == 1)
+        for: 15s
+        labels: {severity: warning}
+        annotations: {summary: 'Observed distribution shift in {{ $labels.feature }}; investigate, not proof of accuracy loss'}
+      - alert: Task6DemoDistributionDrift
+        expr: (task6_drift_psi{mode="demo"} >= 0.25) and on (job,instance,mode) (task6_drift_ready{mode="demo"} == 1)
+        for: 10s
+        labels: {severity: demo}
+        annotations: {summary: 'SIMULATED drift scenario: {{ $labels.feature }}; demonstration only'}

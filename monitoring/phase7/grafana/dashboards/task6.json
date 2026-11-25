@@ -1,0 +1,519 @@
+{
+  "uid": "task6-phase7",
+  "title": "Task 6 | RealEstate AI Monitoring",
+  "tags": [
+    "task6",
+    "local",
+    "phase7"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "API scrape health",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"task6-api\"}",
+          "legendFormat": "API up",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Observed requests",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(task6_api_requests_total)",
+          "legendFormat": "Requests",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Successful properties",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "task6_predicted_properties_total",
+          "legendFormat": "Properties",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Training reference",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "task6_reference_rows",
+          "legendFormat": "Rows",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Observed requests by status",
+      "description": "401 can be an intentional security test, not a server failure.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (task6_api_requests_total)",
+          "legendFormat": "HTTP {{status}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Prediction latency p95 (2m)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95,sum by (le,route) (rate(task6_api_request_duration_seconds_bucket{route=~\"single|batch\"}[2m])))",
+          "legendFormat": "{{route}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Rolling sample count (minimum 30)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "task6_drift_samples",
+          "legendFormat": "{{mode}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Observed prediction mean \u2014 source units",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 11,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "task6_prediction_window_mean{mode=\"live\"}",
+          "legendFormat": "Live",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Active alerts (including demo)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 11,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "sum by (alertname,severity) (ALERTS{alertstate=\"firing\"})",
+          "legendFormat": "{{alertname}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "LIVE \u2014 distribution PSI",
+      "description": "No data until 30 successful properties. Warning threshold 0.25. Not accuracy drift.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "expr": "task6_drift_psi{mode=\"live\"}",
+          "legendFormat": "{{feature}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "bargauge",
+      "title": "DEMO \u2014 simulated high-area scenarios PSI",
+      "description": "Synthetic resampling of high-area training scenarios, separate from real API traffic. Threshold 0.25.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "task6-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "expr": "task6_drift_psi{mode=\"demo\"}",
+          "legendFormat": "{{feature}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "task6-prometheus"
+          },
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    }
+  ],
+  "editable": false
+}

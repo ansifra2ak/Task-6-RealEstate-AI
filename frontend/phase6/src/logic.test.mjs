@@ -1,0 +1,15 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {validate,parseCSV,scenarios,DEFAULT,FIELDS} from './logic.mjs';
+const info={training_ranges:{Area:{min:520,max:4999},Bedrooms:{min:1,max:5},Bathrooms:{min:1,max:3},Age:{min:0,max:49}},categories:{Location:['City Center','Rural','Suburb'],Property_Type:['Apartment','House','Villa']}};
+const header=FIELDS.join(',')+'\n',line='2500,3,2,15,Suburb,House';
+test('integer Area and all six fields',()=>assert.deepEqual(validate({...DEFAULT,Area:'2500'},info),DEFAULT));
+test('fractional Area rejected',()=>assert.throws(()=>validate({...DEFAULT,Area:2500.5},info)));
+test('empty Age rejected',()=>assert.throws(()=>validate({...DEFAULT,Age:''},info)));
+test('unknown category rejected',()=>assert.throws(()=>validate({...DEFAULT,Location:'Unknown'},info)));
+test('range enforced',()=>assert.throws(()=>validate({...DEFAULT,Bedrooms:6},info)));
+test('CSV quoted values and CRLF',()=>assert.deepEqual(parseCSV(header+'2500,3,2,15,"Suburb","House"\r\n',info),[DEFAULT]));
+test('CSV wrong header rejected',()=>assert.throws(()=>parseCSV('Area,Age\n2500,15',info)));
+test('CSV wrong number of columns rejected',()=>assert.throws(()=>parseCSV(header+line+',x',info)));
+test('CSV 100 row cap',()=>assert.throws(()=>parseCSV(header+Array(101).fill(line).join('\n'),info)));
+test('CSV unclosed quote rejected',()=>assert.throws(()=>parseCSV(header+'2500,3,2,15,"Suburb,House',info)));
+test('scenarios change exactly one field and stay in range',()=>{const rows=scenarios(DEFAULT,info);assert.deepEqual(rows[0].row,DEFAULT);assert.ok(rows.length>6);for(const c of rows.slice(1)){assert.equal(FIELDS.filter(k=>c.row[k]!==DEFAULT[k]).length,1);assert.deepEqual(validate(c.row,info),c.row)}});
+test('boundary scenarios have no no-op',()=>{const base={...DEFAULT,Area:520,Age:0};for(const c of scenarios(base,info).slice(1))assert.equal(FIELDS.filter(k=>c.row[k]!==base[k]).length,1)});

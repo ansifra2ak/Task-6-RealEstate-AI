@@ -1,0 +1,53 @@
+name: Phase 9 source checks and image delivery
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish source-only image to GHCR (no model or dataset)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install -r requirements-phase7.txt
+      - name: Source-only API, gateway, monitoring and deployment tests
+        run: python -m pytest -q tests/test_phase5.py tests/test_phase6.py tests/test_phase7.py tests/test_phase9.py -k 'not local_saved_model_parity'
+      - run: npm --prefix frontend/phase6 test
+      - run: python scripts/run_phase9.py stage
+      - run: docker build -t task6-phase9:ci .phase9-build
+      - name: Import runtime inside source-only image
+        run: docker run --rm task6-phase9:ci python -c 'import backend.phase9_runtime, backend.phase9_supervisor, backend.phase7_monitoring, backend.phase6_gateway'
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish == true
+    needs: test-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/run_phase9.py stage
+      - name: Build and publish source-only image
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA}"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$IMAGE" .phase9-build
+          docker push "$IMAGE"
+          docker logout ghcr.io
