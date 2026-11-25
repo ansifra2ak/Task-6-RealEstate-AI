@@ -1,0 +1,2 @@
+# The local launcher writes exact versions from the existing verified Python 3.12 environment.
+-r requirements-render-lock.txt

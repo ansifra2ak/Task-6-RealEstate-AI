@@ -1,0 +1,26 @@
+# Deny by default. No private data, model, secret file, git history or local build outputs.
+**
+!Dockerfile.render
+!requirements-render.txt
+!requirements-render-lock.txt
+!backend/
+!backend/**/
+!backend/*.py
+!backend/**/*.py
+!frontend/
+!frontend/phase6/
+!frontend/phase6/package.json
+!frontend/phase6/package-lock.json
+!frontend/phase6/index.html
+!frontend/phase6/src/
+!frontend/phase6/src/**/
+!frontend/phase6/src/*.jsx
+!frontend/phase6/src/*.js
+!frontend/phase6/src/*.mjs
+!frontend/phase6/src/*.css
+!frontend/phase6/src/*.svg
+!frontend/phase6/src/**/*.jsx
+!frontend/phase6/src/**/*.js
+!frontend/phase6/src/**/*.mjs
+!frontend/phase6/src/**/*.css
+!frontend/phase6/src/**/*.svg
